@@ -46,3 +46,28 @@ class TestGalacticUnitConverter:
         assert not self.guc.sanity_check_roman_numerals('DD')
         assert not self.guc.sanity_check_roman_numerals('DDXD')
         assert not self.guc.sanity_check_roman_numerals('MLL')
+
+    def test_subtraction_sanity_check_roman_numerals(self):
+
+        # "I" can be subtracted from "V" and "X" only.
+        assert self.guc.sanity_check_roman_numerals('IV')
+        assert self.guc.sanity_check_roman_numerals('IX')
+        assert not self.guc.sanity_check_roman_numerals('IM')
+
+        # "X" can be subtracted from "L" and "C" only.
+        assert self.guc.sanity_check_roman_numerals('XL')
+        assert self.guc.sanity_check_roman_numerals('XC')
+        assert not self.guc.sanity_check_roman_numerals('XM')
+
+        # "C" can be subtracted from "D" and "M" only.
+        assert self.guc.sanity_check_roman_numerals('CD')
+        assert self.guc.sanity_check_roman_numerals('CM')
+
+        # "V", "L", and "D" can never be subtracted.
+        assert not self.guc.sanity_check_roman_numerals('DM')
+        assert not self.guc.sanity_check_roman_numerals('LC')
+        assert not self.guc.sanity_check_roman_numerals('VX')
+
+        # Only one small-value symbol may be subtracted from any large-value symbol.
+        assert not self.guc.sanity_check_roman_numerals('IIX')
+        assert not self.guc.sanity_check_roman_numerals('XXC')
