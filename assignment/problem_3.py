@@ -33,14 +33,14 @@ class GalacticUnitConverter:
     def convert_decimal_to_roman(self, decimal: int):
         pass
 
-    def get_smaller_numerals(self, target_numeral: str):
+    def get_smaller_r_numerals(self, target_r_numeral: str):
         """
-        :param target_numeral: The roman numeral as string for which the ones with lower values should be calculated.
+        :param target_r_numeral: The roman numeral as string for which the ones with lower values should be calculated.
         :return: A list of roman numerals for which holds that their value is lower than the one of the target numeral
         """
 
         smaller_numerals = []
-        value_of_target = self.numeral_to_value.get(target_numeral)
+        value_of_target = self.numeral_to_value.get(target_r_numeral)
 
         # Safe variant which does not rely on the fact the the dictionary is sorted by value.
         for numeral, value in self.numeral_to_value.items():
@@ -48,6 +48,29 @@ class GalacticUnitConverter:
                 smaller_numerals.append(numeral)
 
         return smaller_numerals
+
+    def rule_compliant_subtraction(self, first_r_numeral: str, second_r_numeral: str):
+        """
+        Checks whether second_numeral - first_numeral is allowed according to the rules.
+        :param first_r_numeral: A for a roman numeral (sub)string "AB"
+        :param second_r_numeral: B for a roman numeral (sub)string "AB"
+        :return: True if second_numeral - first_numeral is allowed according to the rules, else False.
+        """
+
+        # Alternatively to the hard-coded rules for I,X and C, a "subtraction is only allowed from the next
+        # two higher symbols" rule could have been implemented using self.numeral_to_value.
+        allowed_to_subtract_from = {
+            'I': ['V', 'X'],
+            'X': ['L', 'C'],
+            'C': ['D', 'M'],
+        }
+
+        if first_r_numeral in ['V', 'L', 'D']:
+            return False
+        elif not second_r_numeral in allowed_to_subtract_from.get(first_r_numeral):
+            return False
+        else:
+            return True
 
     def sanity_check_roman_numerals(self, roman_numerals: str):
 
@@ -57,32 +80,50 @@ class GalacticUnitConverter:
 
         # "D", "L", and "V" can never be repeated. -> occur once at most
         nbr_occurrences_numerals = Counter(roman_numerals)
-        for numeral in ['D', 'L', 'V']:
-            if nbr_occurrences_numerals[numeral] > 1:
+        for r_numeral in ['D', 'L', 'V']:
+            if nbr_occurrences_numerals[r_numeral] > 1:
                 return False
 
         # At most 3 repetitions (+1  in case of subtraction) check
         # Assumption: Cases like XXIX (less than 3 receptions followed by a subtraction) are also valid.
-        for numeral in ['I', 'X', 'C', 'M']:
+        for r_numeral in ['I', 'X', 'C', 'M']:
 
-            smaller_numerals = self.get_smaller_numerals(numeral)
+            smaller_numerals = self.get_smaller_r_numerals(r_numeral)
 
             if len(smaller_numerals) > 0:
                 smaller_numerals_str = "".join(smaller_numerals)
                 # Pattern: More than 4 receptions or
-                pattern = f'([{numeral}]{{4,}}|([{numeral}]{{1,3}}[{smaller_numerals_str}][{numeral}]{{2,}}))'
+                pattern = f'([{r_numeral}]{{4,}}|([{r_numeral}]{{1,3}}[{smaller_numerals_str}][{r_numeral}]{{2,}}))'
             else:
-                # Specific pattern for numeral, from which nothing can be subtracted, e.g. I
+                # Specific pattern for r_numeral, from which nothing can be subtracted, e.g. I
                 # smaller_numerals is emtpy -> wrong pattern check
-                pattern = f'[{numeral}]{{4,}}'
+                pattern = f'[{r_numeral}]{{4,}}'
 
             # In case the pattern is found a rules is broken and the sanity check fails.
             pattern = re.compile(pattern)
             if bool(re.search(pattern, roman_numerals)):
                 return False
 
+        for index, current_r_numeral in enumerate(roman_numerals):
 
+            # No subtraction of first r_numeral possible
+            if index == 0:
+                continue
 
+            prev_r_numeral = roman_numerals[index - 1]
+
+            # Subtraction case:
+            if self.numeral_to_value.get(prev_r_numeral) < self.numeral_to_value.get(current_r_numeral):
+                if not self.rule_compliant_subtraction(prev_r_numeral, current_r_numeral):
+                    return False
+
+                # Starting from the third r_numeral, a double subtraction error must be checked.
+                if index > 1:
+
+                    # Check if r_numeral at two positions before the current also has a lower value
+                    prev_r_numeral_2 = roman_numerals[index - 2]
+                    if self.numeral_to_value.get(prev_r_numeral_2) < self.numeral_to_value.get(current_r_numeral):
+                        return False
 
         return True
 

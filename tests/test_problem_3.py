@@ -49,6 +49,8 @@ class TestGalacticUnitConverter:
 
     def test_subtraction_sanity_check_roman_numerals(self):
 
+
+
         # "I" can be subtracted from "V" and "X" only.
         assert self.guc.sanity_check_roman_numerals('IV')
         assert self.guc.sanity_check_roman_numerals('IX')
@@ -71,3 +73,8 @@ class TestGalacticUnitConverter:
         # Only one small-value symbol may be subtracted from any large-value symbol.
         assert not self.guc.sanity_check_roman_numerals('IIX')
         assert not self.guc.sanity_check_roman_numerals('XXC')
+
+        # Added later on
+        assert not self.guc.sanity_check_roman_numerals('IXC')
+        assert not self.guc.sanity_check_roman_numerals('MVIXC')
+        assert not self.guc.sanity_check_roman_numerals('CIIX')
