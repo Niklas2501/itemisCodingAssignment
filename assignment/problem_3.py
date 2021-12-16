@@ -8,7 +8,7 @@ import roman
 class GalacticUnitConverter:
 
     def __init__(self):
-        self.numeral_to_value = {
+        self.roman_digit_to_dec_value = {
             'I': 1,
             'V': 5,
             'X': 10,
@@ -18,7 +18,7 @@ class GalacticUnitConverter:
             'M': 1000
         }
 
-        self.galactic_to_roman = {}
+        self.galactic_digit_to_roman = {}
         self.material_values = {}
 
     def convert(self) -> None:
@@ -60,7 +60,7 @@ class GalacticUnitConverter:
             print('invalid input. Input ignored.')
         else:
             # Store the mapping of galactic to a roman numeral
-            self.galactic_to_roman[parts[0]] = parts[-1]
+            self.galactic_digit_to_roman[parts[0]] = parts[-1]
 
     def handle_material_info(self, parts: [str]) -> None:
         """
@@ -98,51 +98,51 @@ class GalacticUnitConverter:
         material_value = credits // amount_decimal
         self.material_values[material] = material_value
 
-    def convert_galactic_to_roman(self, galactic_numerals: [str]) -> Optional[str]:
+    def convert_galactic_to_roman(self, galactic_digits: [str]) -> Optional[str]:
         """
         Converts a list of galactic digits to a string containing the corresponding roman numeral.
-        :param galactic_numerals: A list of galactic digits.
+        :param galactic_digits: A list of galactic digits.
         :return: The corresponding roman numeral as a string. In case no valid roman numeral exists None is returned.
         """
 
-        roman_numerals = []
+        roman_numeral = []
 
-        for galactic_numeral in galactic_numerals:
-            roman_numeral = self.galactic_to_roman.get(galactic_numeral)
-            roman_numerals.append(roman_numeral)
+        for galactic_digit in galactic_digits:
+            roman_digit = self.galactic_digit_to_roman.get(galactic_digit)
+            roman_numeral.append(roman_digit)
 
-        roman_numerals = "".join(roman_numerals)
+        roman_numeral = "".join(roman_numeral)
 
-        if self.is_valid_roman_numeral(roman_numerals):
-            return roman_numerals
+        if self.is_valid_roman_numeral(roman_numeral):
+            return roman_numeral
         else:
             return None
 
     def handle_request(self, parts: [str]) -> None:
         pass
 
-    def get_smaller_r_numerals(self, target_r_numeral: str) -> list[str]:
+    def get_smaller_roman_digits(self, target_roman_digit: str) -> list[str]:
         """
-        :param target_r_numeral: The roman numeral as string for which the ones with lower values should be calculated.
-        :return: A list of roman numerals for which holds that their value is lower than the one of the target numeral
+        :param target_roman_digit: The roman digit as string for which the ones with lower values should be calculated.
+        :return: A list of roman digits for which holds that their value is lower than the one of the target digit
         """
 
-        smaller_numerals = []
-        value_of_target = self.numeral_to_value.get(target_r_numeral)
+        smaller_digits = []
+        value_of_target = self.roman_digit_to_dec_value.get(target_roman_digit)
 
         # Safe variant which does not rely on the fact the the dictionary is sorted by value.
-        for numeral, value in self.numeral_to_value.items():
+        for digit, value in self.roman_digit_to_dec_value.items():
             if value < value_of_target:
-                smaller_numerals.append(numeral)
+                smaller_digits.append(digit)
 
-        return smaller_numerals
+        return smaller_digits
 
-    def rule_compliant_subtraction(self, first_r_numeral: str, second_r_numeral: str) -> bool:
+    def rule_compliant_subtraction(self, first_roman_digit: str, second_roman_digit: str) -> bool:
         """
         Checks whether second_numeral - first_numeral is allowed according to the rules.
-        :param first_r_numeral: A for a roman numeral (sub)string "AB"
-        :param second_r_numeral: B for a roman numeral (sub)string "AB"
-        :return: True if second_numeral - first_numeral is allowed according to the rules, else False.
+        :param first_roman_digit: A for a roman numeral (sub)string "AB"
+        :param second_roman_digit: B for a roman numeral (sub)string "AB"
+        :return: True if second_roman_digit - first_roman_digit is allowed according to the rules, False otherwise.
         """
 
         # Alternatively to the hard-coded rules for I,X and C, a "subtraction is only allowed from the next
@@ -153,71 +153,71 @@ class GalacticUnitConverter:
             'C': ['D', 'M'],
         }
 
-        if first_r_numeral in ['V', 'L', 'D']:
+        if first_roman_digit in ['V', 'L', 'D']:
             return False
-        elif not second_r_numeral in allowed_to_subtract_from.get(first_r_numeral):
+        elif not second_roman_digit in allowed_to_subtract_from.get(first_roman_digit):
             return False
         else:
             return True
 
-    def is_valid_roman_numeral(self, roman_numerals: str) -> bool:
+    def is_valid_roman_numeral(self, roman_numeral: str) -> bool:
         """
         Checks whether the input string is a valid roman numeral.
         For the purpose of the assignment, the implementation adheres to the given rules,
-            even if a simpler test for the correctness of Roman numerals exists.
-        :param roman_numerals: A string containing a roman numeral
-        :return: True if roman_numerals is a valid roman number, False otherwise.
+            even if simpler tests for the correctness of a roman numeral exist.
+        :param roman_numeral: A string containing a roman numeral
+        :return: True if roman_numeral is a valid roman numeral, False otherwise.
         """
 
         # Ensure the passed string only contains valid roman numerals
-        if not all([char in self.numeral_to_value.keys() for char in roman_numerals]):
+        if not all([char in self.roman_digit_to_dec_value.keys() for char in roman_numeral]):
             return False
 
         # "D", "L", and "V" can never be repeated. -> occur once at most
-        nbr_occurrences_numerals = Counter(roman_numerals)
-        for r_numeral in ['D', 'L', 'V']:
-            if nbr_occurrences_numerals[r_numeral] > 1:
+        nbr_occurrences_numerals = Counter(roman_numeral)
+        for roman_digit in ['D', 'L', 'V']:
+            if nbr_occurrences_numerals[roman_digit] > 1:
                 return False
 
         # At most 3 repetitions (+1  in case of subtraction) check
         # Assumption: Cases like XXIX (less than 3 receptions followed by a subtraction) are also valid.
-        for r_numeral in ['I', 'X', 'C', 'M']:
+        for roman_digit in ['I', 'X', 'C', 'M']:
 
-            smaller_numerals = self.get_smaller_r_numerals(r_numeral)
+            smaller_digits = self.get_smaller_roman_digits(roman_digit)
 
-            if len(smaller_numerals) > 0:
-                smaller_numerals_str = "".join(smaller_numerals)
+            if len(smaller_digits) > 0:
+                smaller_digits_str = "".join(smaller_digits)
                 # Pattern: More than 4 receptions or
-                pattern = f'([{r_numeral}]{{4,}}|([{r_numeral}]{{1,3}}[{smaller_numerals_str}][{r_numeral}]{{2,}}))'
+                pattern = f'([{roman_digit}]{{4,}}|([{roman_digit}]{{1,3}}[{smaller_digits_str}][{roman_digit}]{{2,}}))'
             else:
-                # Specific pattern for r_numeral, from which nothing can be subtracted, e.g. I
-                # smaller_numerals is emtpy -> wrong pattern check
-                pattern = f'[{r_numeral}]{{4,}}'
+                # Specific pattern for roman_digit, from which nothing can be subtracted, e.g. I
+                # smaller_digits is emtpy -> wrong pattern check
+                pattern = f'[{roman_digit}]{{4,}}'
 
             # In case the pattern is found a rules is broken and the sanity check fails.
             pattern = re.compile(pattern)
-            if bool(re.search(pattern, roman_numerals)):
+            if bool(re.search(pattern, roman_numeral)):
                 return False
 
-        for index, current_r_numeral in enumerate(roman_numerals):
+        for index, current_digit in enumerate(roman_numeral):
 
             # No subtraction of first numeral possible
             if index == 0:
                 continue
 
-            prev_r_numeral = roman_numerals[index - 1]
+            prev_digit = roman_numeral[index - 1]
 
             # Subtraction case:
-            if self.numeral_to_value.get(prev_r_numeral) < self.numeral_to_value.get(current_r_numeral):
-                if not self.rule_compliant_subtraction(prev_r_numeral, current_r_numeral):
+            if self.roman_digit_to_dec_value.get(prev_digit) < self.roman_digit_to_dec_value.get(current_digit):
+                if not self.rule_compliant_subtraction(prev_digit, current_digit):
                     return False
 
                 # Starting from the third numeral, a double subtraction error must be checked.
                 if index > 1:
 
                     # Check if numeral at two positions before the current one also has a lower value
-                    prev_r_numeral_2 = roman_numerals[index - 2]
-                    if self.numeral_to_value.get(prev_r_numeral_2) < self.numeral_to_value.get(current_r_numeral):
+                    prev_digit_2 = roman_numeral[index - 2]
+                    if self.roman_digit_to_dec_value.get(prev_digit_2) < self.roman_digit_to_dec_value.get(current_digit):
                         return False
 
         return True
