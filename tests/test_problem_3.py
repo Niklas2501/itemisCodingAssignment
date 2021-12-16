@@ -69,8 +69,13 @@ class TestGalacticUnitConverter:
         # Requests via inputs
         self.guc.process_input_line("how much is pish tegj glob glob ?")
         assert get_output_line() == "pish tegj glob glob is 42"
+        self.guc.process_input_line("how many Credits is glob prok Silver ?")
+        assert get_output_line() == "glob prok Silver is 68 Credits"
         self.guc.process_input_line("how many Credits is glob prok Gold ?")
         assert get_output_line() == "glob prok Gold is 57800 Credits"
+
+        self.guc.process_input_line('how much wood could a woodchuck chuck if a woodchuck could chuck wood ?')
+        assert get_output_line() == "I have no idea what you are talking about"
 
         # Re-setting values
         self.guc.process_input_line('glob is X')
