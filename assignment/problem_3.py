@@ -15,25 +15,16 @@ class GalacticUnitConverter:
             'M': 1000
         }
 
-    def convert(self):
+        self.galactic_to_roman = {}
+        self.metal_values = {}
+
+    def convert(self) -> None:
         pass
 
-    def read_user_input(self):
+    def process_input_line(self, input_line: str) -> None:
         pass
 
-    def handle_user_input(self):
-        pass
-
-    def output_results(self):
-        pass
-
-    def convert_roman_to_decimal(self, roman_numerals: str):
-        pass
-
-    def convert_decimal_to_roman(self, decimal: int):
-        pass
-
-    def get_smaller_r_numerals(self, target_r_numeral: str):
+    def get_smaller_r_numerals(self, target_r_numeral: str) -> list[str]:
         """
         :param target_r_numeral: The roman numeral as string for which the ones with lower values should be calculated.
         :return: A list of roman numerals for which holds that their value is lower than the one of the target numeral
@@ -49,7 +40,7 @@ class GalacticUnitConverter:
 
         return smaller_numerals
 
-    def rule_compliant_subtraction(self, first_r_numeral: str, second_r_numeral: str):
+    def rule_compliant_subtraction(self, first_r_numeral: str, second_r_numeral: str) -> bool:
         """
         Checks whether second_numeral - first_numeral is allowed according to the rules.
         :param first_r_numeral: A for a roman numeral (sub)string "AB"
@@ -72,7 +63,14 @@ class GalacticUnitConverter:
         else:
             return True
 
-    def sanity_check_roman_numerals(self, roman_numerals: str):
+    def sanity_check_roman_numerals(self, roman_numerals: str) -> bool:
+        """
+        Checks whether the input string is a valid roman / intergalactic number.
+        For the purpose of the assignment, the implementation adheres to the given rules,
+            even if a simpler test for the correctness of Roman numerals exists.
+        :param roman_numerals: A string containing a roman numeral
+        :return: True if roman_numerals is a valid roman number, False otherwise.
+        """
 
         # Ensure the passed string only contains valid roman numerals
         if not all([char in self.numeral_to_value.keys() for char in roman_numerals]):
@@ -106,7 +104,7 @@ class GalacticUnitConverter:
 
         for index, current_r_numeral in enumerate(roman_numerals):
 
-            # No subtraction of first r_numeral possible
+            # No subtraction of first numeral possible
             if index == 0:
                 continue
 
@@ -117,10 +115,10 @@ class GalacticUnitConverter:
                 if not self.rule_compliant_subtraction(prev_r_numeral, current_r_numeral):
                     return False
 
-                # Starting from the third r_numeral, a double subtraction error must be checked.
+                # Starting from the third numeral, a double subtraction error must be checked.
                 if index > 1:
 
-                    # Check if r_numeral at two positions before the current also has a lower value
+                    # Check if numeral at two positions before the current one also has a lower value
                     prev_r_numeral_2 = roman_numerals[index - 2]
                     if self.numeral_to_value.get(prev_r_numeral_2) < self.numeral_to_value.get(current_r_numeral):
                         return False

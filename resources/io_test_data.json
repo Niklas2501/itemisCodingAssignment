@@ -1,0 +1,78 @@
+{
+  "predefined_test_set": {
+    "user_input": [
+      "glob is I",
+      "prok is V",
+      "pish is X",
+      "tegj is L",
+      "glob glob Silver is 34 Credits",
+      "glob prok Gold is 57800 Credits",
+      "pish pish Iron is 3910 Credits",
+      "how much is pish tegj glob glob ?",
+      "how many Credits is glob prok Silver ?",
+      "how many Credits is glob prok Gold ?",
+      "how many Credits is glob prok Iron ?",
+      "how much wood could a woodchuck chuck if a woodchuck could chuck wood ?"
+    ],
+    "expected_output": [
+      "pish tegj glob glob is 42",
+      "glob prok Silver is 68 Credits",
+      "glob prok Gold is 57800 Credits",
+      "glob prok Iron is 782 Credits",
+      "I have no idea what you are talking about"
+    ]
+  },
+  "alternative_test_set": {
+    "user_input_info": [
+      "pok is I",
+      "mok is X",
+      "zok is L",
+      "mok pok pok Iron is 24 Credits",
+      "mok zok Gold is 1200 Credits",
+      "zok mok mok Silver is 210 Credits",
+      "how much is mok mok ?",
+      "how many Credits is pok pok Silver ?",
+      "how many Credits is mok pok Gold ?"
+    ],
+    "expected_output": [
+      "mok mok is 20",
+      "pok pok Silver is 6 Credits",
+      "mok pok Gold is 900 Gold"
+    ]
+  },
+  "missing_info_test_set": {
+    "user_input_info": [
+      "pok is I",
+      "mok pok pok Iron is 24 Credits",
+      "mok is X",
+      "how many Credits is zok Iron ?",
+      "zok is L",
+      "how many Credits is plok Iron ?",
+      "invalid_user_input",
+      "plok is L",
+      "how many Credits is Iron ?"
+    ],
+    "expected_output": [
+      "Missing information: How much is mok ?",
+      "Missing information: How much is zok ?",
+      "zok Iron is 100 Credits",
+      "Missing information: How much is plok ?",
+      "Invalid input: How much is is plok ?",
+      "plok iron is 100 Credits",
+      "Iron is 2 Credits"
+    ]
+  },
+  "error_test_set": {
+    "user_input_info": [
+      "pok is I",
+      "mok is X",
+      "plok is L",
+      "plok mok plok Copper is 999 Credits",
+      "how many Credits is plok mok plok Iron ?"
+    ],
+    "expected_output": [
+      "Warning: plok mok plok is an invalid number. Input ignored.",
+      "Warning: plok mok plok is an invalid number. Input ignored."
+    ]
+  }
+}
