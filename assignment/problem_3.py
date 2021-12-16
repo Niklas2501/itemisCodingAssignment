@@ -1,5 +1,6 @@
 import re
 from collections import Counter
+from typing import Optional
 
 import roman
 
@@ -69,7 +70,7 @@ class GalacticUnitConverter:
         :return: None
         """
 
-        # The total number of credits should be an integer at the second to last position
+        # The total number of credits should be an integer at the second to last position.
         try:
             credits = int(parts[-2])
         except ValueError:
@@ -80,20 +81,13 @@ class GalacticUnitConverter:
             print('invalid input. Input ignored.')
             return
 
-        # The material should be the fourth to last term, everything before describes the amount as a galactic number
+        # The material should be the fourth to last term, everything before describes the amount as a galactic number.
         material = parts[-4]
         amount_galactic = parts[0:-4]
-        amount_roman = []
+        amount_roman = self.convert_galactic_to_roman(amount_galactic)
 
-        # Convert list of galactic numerals to roman numeral string, which can be validated.
-        for galactic_numeral in amount_galactic:
-            roman_numeral = self.galactic_to_roman.get(galactic_numeral)
-            amount_roman.append(roman_numeral)
-
-        amount_roman = "".join(amount_roman)
-
-        # Abort if the galactic number given can not be converted to a valid roman numeral.
-        if not self.is_valid_roman_numeral(amount_roman):
+        # amount_roman is None in case amount_galactic can not be converted to a valid roman numeral.
+        if amount_roman is None:
             print('invalid input. Input ignored.')
             return
 
@@ -103,6 +97,26 @@ class GalacticUnitConverter:
         # Calculate the and store the value of a single unit of the material.
         material_value = credits // amount_decimal
         self.material_values[material] = material_value
+
+    def convert_galactic_to_roman(self, galactic_numerals: [str]) -> Optional[str]:
+        """
+        Converts a list of galactic digits to a string containing the corresponding roman numeral.
+        :param galactic_numerals: A list of galactic digits.
+        :return: The corresponding roman numeral as a string. In case no valid roman numeral exists None is returned.
+        """
+
+        roman_numerals = []
+
+        for galactic_numeral in galactic_numerals:
+            roman_numeral = self.galactic_to_roman.get(galactic_numeral)
+            roman_numerals.append(roman_numeral)
+
+        roman_numerals = "".join(roman_numerals)
+
+        if self.is_valid_roman_numeral(roman_numerals):
+            return roman_numerals
+        else:
+            return None
 
     def handle_request(self, parts: [str]) -> None:
         pass
