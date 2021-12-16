@@ -53,11 +53,11 @@
       "how many Credits is Iron ?"
     ],
     "expected_output": [
-      "Missing information: How much is mok ?",
-      "Missing information: How much is zok ?",
+      "missing information: How much is mok ?",
+      "missing information: How much is zok ?",
       "zok Iron is 100 Credits",
-      "Missing information: How much is plok ?",
-      "Invalid input: How much is is plok ?",
+      "missing information: How much is plok ?",
+      "invalid input: How much is plok ?",
       "plok iron is 100 Credits",
       "Iron is 2 Credits"
     ]
@@ -71,8 +71,8 @@
       "how many Credits is plok mok plok Iron ?"
     ],
     "expected_output": [
-      "Warning: plok mok plok is an invalid number. Input ignored.",
-      "Warning: plok mok plok is an invalid number. Input ignored."
+      "warning: plok mok plok is an invalid number. Input ignored.",
+      "warning: plok mok plok is an invalid number. Input ignored."
     ]
   }
 }
