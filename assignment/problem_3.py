@@ -30,11 +30,14 @@ class GalacticUnitConverter:
         :return: None
         """
 
+        # Split the input line into single terms separated by a space.
         parts = input_line.strip().split(' ')
 
+        # Basic check for the number of terms such that out of range errors are avoided.
         if len(parts) < 3:
             print('invalid input. Input ignored.')
 
+        # Pass the list of terms in the input line to a specific sub method based on the input type.
         if parts[-1] == '?':
             self.handle_request(parts)
         elif parts[-1] == 'Credits':
@@ -47,6 +50,7 @@ class GalacticUnitConverter:
     def handle_galactic_numeral_info(self, parts: [str]) -> None:
         """
         Used to process and store inputs regarding the mapping of intergalactic to roman numerals.
+        Input line example: pish is X
         :param parts: A list of terms (strings) in the input line.
         :return: None
         """
@@ -54,31 +58,49 @@ class GalacticUnitConverter:
         if not (len(parts) == 3 and parts[1] == 'is' and self.is_valid_roman_numeral(parts[-1])):
             print('invalid input. Input ignored.')
         else:
+            # Store the mapping of galactic to a roman numeral
             self.galactic_to_roman[parts[0]] = parts[-1]
 
     def handle_material_info(self, parts: [str]) -> None:
+        """
+        Used to process and store inputs regarding the value of materials.
+        Input line example: glob glob Silver is 34 Credits
+        :param parts: A list of terms (strings) in the input line.
+        :return: None
+        """
 
+        # The total number of credits should be an integer at the second to last position
         try:
             credits = int(parts[-2])
         except ValueError:
             credits = None
 
+        # Abort in case no valid credit amount is given or the input ends with an unexpected term.
+        if parts[-1] != 'Credits' or credits is None:
+            print('invalid input. Input ignored.')
+            return
+
+        # The material should be the fourth to last term, everything before describes the amount as a galactic number
         material = parts[-4]
         amount_galactic = parts[0:-4]
         amount_roman = []
 
+        # Convert list of galactic numerals to roman numeral string, which can be validated.
         for galactic_numeral in amount_galactic:
             roman_numeral = self.galactic_to_roman.get(galactic_numeral)
             amount_roman.append(roman_numeral)
 
         amount_roman = "".join(amount_roman)
 
-        if parts[-1] != 'Credits' or credits is None or not self.is_valid_roman_numeral(amount_roman):
+        # Abort if the galactic number given can not be converted to a valid roman numeral.
+        if not self.is_valid_roman_numeral(amount_roman):
             print('invalid input. Input ignored.')
             return
 
         # A library function is used to convert the amount in roman numeral into a decimal representation.
         amount_decimal = roman.fromRoman(amount_roman)
+
+        # Calculate the and store the value of a single unit of the material.
         material_value = credits // amount_decimal
         self.material_values[material] = material_value
 

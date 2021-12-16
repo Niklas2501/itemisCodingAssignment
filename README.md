@@ -12,6 +12,7 @@
 * In case an invalid intergalactic / roman number is entered, a warning is printed and the input is ignored.
 * In case an intergalactic number is defined a second time, the old value is simply overwritten. The same is true for
   changes in the value of materials.
+* The same roman numeral can be represented by multiple intergalactic ones. 
 * pyTest is used over the standard unit testing module for it's more convenient test definition.
 
 ## Build
