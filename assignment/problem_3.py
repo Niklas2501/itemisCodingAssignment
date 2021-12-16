@@ -1,6 +1,8 @@
 import re
 from collections import Counter
 
+import roman
+
 
 class GalacticUnitConverter:
 
@@ -16,12 +18,71 @@ class GalacticUnitConverter:
         }
 
         self.galactic_to_roman = {}
-        self.metal_values = {}
+        self.material_values = {}
 
     def convert(self) -> None:
         pass
 
     def process_input_line(self, input_line: str) -> None:
+        """
+        Receives a single line of user input, executes basic checks and forwards the input based on its type.
+        :param input_line: A single line of input as a string.
+        :return: None
+        """
+
+        parts = input_line.strip().split(' ')
+
+        if len(parts) < 3:
+            print('invalid input. Input ignored.')
+
+        if parts[-1] == '?':
+            self.handle_request(parts)
+        elif parts[-1] == 'Credits':
+            self.handle_material_info(parts)
+        elif parts[1] == 'is' and self.is_valid_roman_numeral(parts[-1]):
+            self.handle_galactic_numeral_info(parts)
+        else:
+            print('invalid input. Input ignored.')
+
+    def handle_galactic_numeral_info(self, parts: [str]) -> None:
+        """
+        Used to process and store inputs regarding the mapping of intergalactic to roman numerals.
+        :param parts: A list of terms (strings) in the input line.
+        :return: None
+        """
+
+        if not (len(parts) == 3 and parts[1] == 'is' and self.is_valid_roman_numeral(parts[-1])):
+            print('invalid input. Input ignored.')
+        else:
+            self.galactic_to_roman[parts[0]] = parts[-1]
+
+    def handle_material_info(self, parts: [str]) -> None:
+
+        try:
+            credits = int(parts[-2])
+        except ValueError:
+            credits = None
+
+        material = parts[-4]
+        amount_galactic = parts[0:-4]
+        amount_roman = []
+
+        for galactic_numeral in amount_galactic:
+            roman_numeral = self.galactic_to_roman.get(galactic_numeral)
+            amount_roman.append(roman_numeral)
+
+        amount_roman = "".join(amount_roman)
+
+        if parts[-1] != 'Credits' or credits is None or not self.is_valid_roman_numeral(amount_roman):
+            print('invalid input. Input ignored.')
+            return
+
+        # A library function is used to convert the amount in roman numeral into a decimal representation.
+        amount_decimal = roman.fromRoman(amount_roman)
+        material_value = credits // amount_decimal
+        self.material_values[material] = material_value
+
+    def handle_request(self, parts: [str]) -> None:
         pass
 
     def get_smaller_r_numerals(self, target_r_numeral: str) -> list[str]:
@@ -63,9 +124,9 @@ class GalacticUnitConverter:
         else:
             return True
 
-    def sanity_check_roman_numerals(self, roman_numerals: str) -> bool:
+    def is_valid_roman_numeral(self, roman_numerals: str) -> bool:
         """
-        Checks whether the input string is a valid roman / intergalactic number.
+        Checks whether the input string is a valid roman numeral.
         For the purpose of the assignment, the implementation adheres to the given rules,
             even if a simpler test for the correctness of Roman numerals exists.
         :param roman_numerals: A string containing a roman numeral

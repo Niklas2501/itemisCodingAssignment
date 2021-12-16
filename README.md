@@ -9,7 +9,9 @@
 * In case some information is missing, e.g. a mapping from an intergalactic to a roman number, the converter will ask to
   input the missing information.
 * In case no amount is given as an intergalactic in a request, an amount of 1 is assumed.
-* In case an invalid intergalactic / roman number is entered a warning is printed and the input is ignored. 
+* In case an invalid intergalactic / roman number is entered, a warning is printed and the input is ignored.
+* In case an intergalactic number is defined a second time, the old value is simply overwritten. The same is true for
+  changes in the value of materials.
 * pyTest is used over the standard unit testing module for it's more convenient test definition.
 
 ## Build

@@ -35,14 +35,15 @@ class TestGalacticUnitConverter:
     #    user_input, expected_output = io_test_set
 
     def test_adding_info_process_input_line(self):
-        # Adding information via inputs
-
+        # Add information via inputs lines
         self.guc.process_input_line('glob is I')
         self.guc.process_input_line('pish is X')
         self.guc.process_input_line('glob glob Silver is 34 Credits')
+
+        # Checks if the information was extracted and stored correctly
         assert self.guc.galactic_to_roman.get('glob') == 'I'
         assert self.guc.galactic_to_roman.get('pish') == 'X'
-        assert self.guc.metal_values.get('Sliver') == 17
+        assert self.guc.material_values.get('Silver') == 17
 
     def test_requests_process_input_line(self, capsys):
         user_info_input = [
@@ -77,76 +78,82 @@ class TestGalacticUnitConverter:
         assert self.guc.galactic_to_roman.get('glob') == 'X'
         assert get_output_line() == "glob glob Silver is 340 Credits"
 
+    def test_edge_cases_process_input_line(self, capsys):
+        pass
         # TODO Add testes cases for missing information and other edge cases.
+        #   Including missing material
+        #   Including input string that can't be interpreted at all (with and wout ?)
+        #   Including just empty string / new line
+        #   Including credits / amount integer division not possible
         # self.guc.process_input_line("how much wood could a woodchuck chuck if a woodchuck could chuck wood ?")
         # assert get_output_line() == "I have no idea what you are talking about"
 
     def test_general_sanity_check_roman_numerals(self):
         # The string should only contain valid roman numerals
-        assert not self.guc.sanity_check_roman_numerals('a')
+        assert not self.guc.is_valid_roman_numeral('a')
 
         # The string should not contain spaces or other control characters
-        assert not self.guc.sanity_check_roman_numerals(' XI\n')
+        assert not self.guc.is_valid_roman_numeral(' XI\n')
 
         # i is valid but should be upper case
-        assert not self.guc.sanity_check_roman_numerals('i')
+        assert not self.guc.is_valid_roman_numeral('i')
 
     def test_repetitions_sanity_check_roman_numerals(self):
         # Tests repetition of I, X, C and M, also subtraction to some degree for the separated by smaller value pattern
-        assert self.guc.sanity_check_roman_numerals('X')
-        assert self.guc.sanity_check_roman_numerals('XI')
-        assert self.guc.sanity_check_roman_numerals('XIX')
-        assert self.guc.sanity_check_roman_numerals('XXX')
-        assert self.guc.sanity_check_roman_numerals('XXXI')
-        assert self.guc.sanity_check_roman_numerals('XXXIX')
+        assert self.guc.is_valid_roman_numeral('X')
+        assert self.guc.is_valid_roman_numeral('XI')
+        assert self.guc.is_valid_roman_numeral('XIX')
+        assert self.guc.is_valid_roman_numeral('XXX')
+        assert self.guc.is_valid_roman_numeral('XXXI')
+        assert self.guc.is_valid_roman_numeral('XXXIX')
 
         # Subtracted numeral follows multiple times
-        assert self.guc.sanity_check_roman_numerals('XIXII')
-        assert self.guc.sanity_check_roman_numerals('XIXIII')
+        assert self.guc.is_valid_roman_numeral('XIXII')
+        assert self.guc.is_valid_roman_numeral('XIXIII')
 
         # More complicated cases
-        assert self.guc.sanity_check_roman_numerals('MDXIXI')
-        assert self.guc.sanity_check_roman_numerals('MDXXIXI')
-        assert self.guc.sanity_check_roman_numerals('MDXXXI')
-        assert self.guc.sanity_check_roman_numerals('MMCDXXXIXIII')
+        assert self.guc.is_valid_roman_numeral('MDXIXI')
+        assert self.guc.is_valid_roman_numeral('MDXXIXI')
+        assert self.guc.is_valid_roman_numeral('MDXXXI')
+        assert self.guc.is_valid_roman_numeral('MMCDXXXIXIII')
 
         # More than 3 repetitions
-        assert not self.guc.sanity_check_roman_numerals('MDXXXXI')
+        assert not self.guc.is_valid_roman_numeral('MDXXXXI')
 
         # More than 3 / 4 repetitions is also caught in case of subtraction
-        assert not self.guc.sanity_check_roman_numerals('XXXXIXX')
-        assert not self.guc.sanity_check_roman_numerals('MDXXIXX')
+        assert not self.guc.is_valid_roman_numeral('XXXXIXX')
+        assert not self.guc.is_valid_roman_numeral('MDXXIXX')
 
         # D, L, V can never be repeated
-        assert not self.guc.sanity_check_roman_numerals('DD')
-        assert not self.guc.sanity_check_roman_numerals('DDXD')
-        assert not self.guc.sanity_check_roman_numerals('MLL')
+        assert not self.guc.is_valid_roman_numeral('DD')
+        assert not self.guc.is_valid_roman_numeral('DDXD')
+        assert not self.guc.is_valid_roman_numeral('MLL')
 
     def test_subtraction_sanity_check_roman_numerals(self):
         # "I" can be subtracted from "V" and "X" only.
-        assert self.guc.sanity_check_roman_numerals('IV')
-        assert self.guc.sanity_check_roman_numerals('IX')
-        assert not self.guc.sanity_check_roman_numerals('IM')
+        assert self.guc.is_valid_roman_numeral('IV')
+        assert self.guc.is_valid_roman_numeral('IX')
+        assert not self.guc.is_valid_roman_numeral('IM')
 
         # "X" can be subtracted from "L" and "C" only.
-        assert self.guc.sanity_check_roman_numerals('XL')
-        assert self.guc.sanity_check_roman_numerals('XC')
-        assert not self.guc.sanity_check_roman_numerals('XM')
+        assert self.guc.is_valid_roman_numeral('XL')
+        assert self.guc.is_valid_roman_numeral('XC')
+        assert not self.guc.is_valid_roman_numeral('XM')
 
         # "C" can be subtracted from "D" and "M" only.
-        assert self.guc.sanity_check_roman_numerals('CD')
-        assert self.guc.sanity_check_roman_numerals('CM')
+        assert self.guc.is_valid_roman_numeral('CD')
+        assert self.guc.is_valid_roman_numeral('CM')
 
         # "V", "L", and "D" can never be subtracted.
-        assert not self.guc.sanity_check_roman_numerals('DM')
-        assert not self.guc.sanity_check_roman_numerals('LC')
-        assert not self.guc.sanity_check_roman_numerals('VX')
+        assert not self.guc.is_valid_roman_numeral('DM')
+        assert not self.guc.is_valid_roman_numeral('LC')
+        assert not self.guc.is_valid_roman_numeral('VX')
 
         # Only one small-value symbol may be subtracted from any large-value symbol.
-        assert not self.guc.sanity_check_roman_numerals('IIX')
-        assert not self.guc.sanity_check_roman_numerals('XXC')
+        assert not self.guc.is_valid_roman_numeral('IIX')
+        assert not self.guc.is_valid_roman_numeral('XXC')
 
         # Added later on
-        assert not self.guc.sanity_check_roman_numerals('IXC')
-        assert not self.guc.sanity_check_roman_numerals('MVIXC')
-        assert not self.guc.sanity_check_roman_numerals('CIIX')
+        assert not self.guc.is_valid_roman_numeral('IXC')
+        assert not self.guc.is_valid_roman_numeral('MVIXC')
+        assert not self.guc.is_valid_roman_numeral('CIIX')
