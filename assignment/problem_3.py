@@ -37,6 +37,7 @@ class GalacticUnitConverter:
         # Basic check for the number of terms such that out of range errors are avoided.
         if len(parts) < 3:
             print('invalid input. Input ignored.')
+            return
 
         # Pass the list of terms in the input line to a specific sub method based on the input type.
         if parts[-1] == '?':
@@ -59,8 +60,14 @@ class GalacticUnitConverter:
         if not (len(parts) == 3 and parts[1] == 'is' and self.is_valid_roman_numeral(parts[-1])):
             print('invalid input. Input ignored.')
         else:
-            # Store the mapping of galactic to a roman numeral
-            self.galactic_digit_to_roman[parts[0]] = parts[-1]
+            galactic_digit, roman_digit = parts[0], parts[-1]
+
+            # Ensure the last part of the input really is a roman digit
+            if roman_digit in self.roman_digit_to_dec_value.keys():
+                # Store the mapping of galactic to a roman numeral
+                self.galactic_digit_to_roman[galactic_digit] = roman_digit
+            else:
+                print('invalid input. Input ignored.')
 
     def handle_material_info(self, parts: [str]) -> None:
         """
@@ -83,15 +90,23 @@ class GalacticUnitConverter:
 
         # The material should be the fourth to last term, everything before describes the amount as a galactic number.
         material = parts[-4]
+
+        # Basic check if the extracted term really is a material
+        # Should be start with an upper case letter and not be in the dictionary of known galactic digits
+        if material[0].islower() or material in self.galactic_digit_to_roman.keys():
+            print(f'{material} does not seem to be a material. Input ignored.')
+            return
+
         amount_galactic = parts[0:-4]
         amount_decimal = self.convert_galactic_to_decimal(amount_galactic)
 
         # amount_roman is None in case amount_galactic can not be converted to
         # a valid roman numeral and thus not to a decimal number.
-        if amount_decimal is None:
+        # Also ensure that the amount of credits is integer dividable by the material amount
+        if amount_decimal is None or credits % amount_decimal != 0:
             print('invalid input. Input ignored.')
         else:
-            # Calculate the and store the value of a single unit of the material.
+            # Calculate and store the value of a single unit of the material.
             material_value = credits // amount_decimal
             self.material_values[material] = material_value
 
@@ -104,7 +119,6 @@ class GalacticUnitConverter:
         """
 
         roman_numeral = []
-
         for galactic_digit in galactic_digits:
             roman_digit = self.galactic_digit_to_roman.get(galactic_digit)
             roman_numeral.append(roman_digit)
@@ -124,31 +138,43 @@ class GalacticUnitConverter:
             amount_galactic = parts[3:-1]
             amount_decimal = self.convert_galactic_to_decimal(amount_galactic)
 
-            # None is returned in case amount_galactic can't be converted to a valid roman numeral (and thus not into a decimal)
+            # None is returned in case amount_galactic can't be converted to a valid roman numeral
+            # (and thus not into a decimal)
             if amount_decimal is None:
                 print('invalid input. Input ignored.')
             else:
                 print(f'{" ".join(amount_galactic)} is {amount_decimal}')
+            return
 
         elif " ".join(parts[0:4]) == 'how many Credits is':
-
-            # Get the material and its price per unit
-            material = parts[-2]
-            material_value = self.material_values.get(material)
 
             # Covert the amount of material requested into the decimal representation
             amount_galactic = parts[4:-2]
             amount_decimal = self.convert_galactic_to_decimal(amount_galactic)
 
-            # None is returned in case amount_galactic can't be converted to a valid roman numeral (and thus not into a decimal)
+            # None is returned in case amount_galactic can't be converted to a valid roman numeral
+            # (and thus not into a decimal)
             if amount_decimal is None:
                 print('invalid input. Input ignored.')
+                return
+
+            # Get the material and its price per unit
+            material = parts[-2]
+
+            if material in self.material_values.keys():
+                material_value = self.material_values.get(material)
             else:
-                overall_value = amount_decimal * material_value
-                print(f'{" ".join(amount_galactic)} {material} is {overall_value} Credits')
+                print(f'unknown material: {material}')
+                return
+
+            overall_value = amount_decimal * material_value
+            print(f'{" ".join(amount_galactic)} {material} is {overall_value} Credits')
+            return
 
         else:
+            # This answer is printed in case it is a request (input ending with a ?) that can't be interpreted at all.
             print('I have no idea what you are talking about')
+            return
 
     def get_smaller_roman_digits(self, target_roman_digit: str) -> list[str]:
         """
@@ -197,6 +223,9 @@ class GalacticUnitConverter:
         :param roman_numeral: A string containing a roman numeral
         :return: True if roman_numeral is a valid roman numeral, False otherwise.
         """
+
+        if roman_numeral is None or roman_numeral == '':
+            return False
 
         # Ensure the passed string only contains valid roman numerals
         if not all([char in self.roman_digit_to_dec_value.keys() for char in roman_numeral]):
