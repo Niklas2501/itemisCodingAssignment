@@ -84,25 +84,23 @@ class GalacticUnitConverter:
         # The material should be the fourth to last term, everything before describes the amount as a galactic number.
         material = parts[-4]
         amount_galactic = parts[0:-4]
-        amount_roman = self.convert_galactic_to_roman(amount_galactic)
+        amount_decimal = self.convert_galactic_to_decimal(amount_galactic)
 
-        # amount_roman is None in case amount_galactic can not be converted to a valid roman numeral.
-        if amount_roman is None:
+        # amount_roman is None in case amount_galactic can not be converted to
+        # a valid roman numeral and thus not to a decimal number.
+        if amount_decimal is None:
             print('invalid input. Input ignored.')
-            return
+        else:
+            # Calculate the and store the value of a single unit of the material.
+            material_value = credits // amount_decimal
+            self.material_values[material] = material_value
 
-        # A library function is used to convert the amount in roman numeral into a decimal representation.
-        amount_decimal = roman.fromRoman(amount_roman)
-
-        # Calculate the and store the value of a single unit of the material.
-        material_value = credits // amount_decimal
-        self.material_values[material] = material_value
-
-    def convert_galactic_to_roman(self, galactic_digits: [str]) -> Optional[str]:
+    def convert_galactic_to_decimal(self, galactic_digits: [str]) -> Optional[int]:
         """
-        Converts a list of galactic digits to a string containing the corresponding roman numeral.
+        Converts a list of galactic digits to a string containing the corresponding decimal number
+        if the corresponding roman number is valid.
         :param galactic_digits: A list of galactic digits.
-        :return: The corresponding roman numeral as a string. In case no valid roman numeral exists None is returned.
+        :return: The corresponding decimal number. In case no valid roman numeral exists None is returned.
         """
 
         roman_numeral = []
@@ -114,12 +112,43 @@ class GalacticUnitConverter:
         roman_numeral = "".join(roman_numeral)
 
         if self.is_valid_roman_numeral(roman_numeral):
-            return roman_numeral
+
+            # A library function is used to convert the roman numeral into a decimal representation.
+            decimal_number = roman.fromRoman(roman_numeral)
+            return decimal_number
         else:
             return None
 
     def handle_request(self, parts: [str]) -> None:
-        pass
+        if " ".join(parts[0:3]) == 'how much is':
+            amount_galactic = parts[3:-1]
+            amount_decimal = self.convert_galactic_to_decimal(amount_galactic)
+
+            # None is returned in case amount_galactic can't be converted to a valid roman numeral (and thus not into a decimal)
+            if amount_decimal is None:
+                print('invalid input. Input ignored.')
+            else:
+                print(f'{" ".join(amount_galactic)} is {amount_decimal}')
+
+        elif " ".join(parts[0:4]) == 'how many Credits is':
+
+            # Get the material and its price per unit
+            material = parts[-2]
+            material_value = self.material_values.get(material)
+
+            # Covert the amount of material requested into the decimal representation
+            amount_galactic = parts[4:-2]
+            amount_decimal = self.convert_galactic_to_decimal(amount_galactic)
+
+            # None is returned in case amount_galactic can't be converted to a valid roman numeral (and thus not into a decimal)
+            if amount_decimal is None:
+                print('invalid input. Input ignored.')
+            else:
+                overall_value = amount_decimal * material_value
+                print(f'{" ".join(amount_galactic)} {material} is {overall_value} Credits')
+
+        else:
+            print('I have no idea what you are talking about')
 
     def get_smaller_roman_digits(self, target_roman_digit: str) -> list[str]:
         """
@@ -217,7 +246,8 @@ class GalacticUnitConverter:
 
                     # Check if numeral at two positions before the current one also has a lower value
                     prev_digit_2 = roman_numeral[index - 2]
-                    if self.roman_digit_to_dec_value.get(prev_digit_2) < self.roman_digit_to_dec_value.get(current_digit):
+                    if self.roman_digit_to_dec_value.get(prev_digit_2) < self.roman_digit_to_dec_value.get(
+                            current_digit):
                         return False
 
         return True

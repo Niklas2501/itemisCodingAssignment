@@ -1,6 +1,7 @@
 import json
 
 import pytest
+import roman
 
 from assignment.problem_3 import GalacticUnitConverter
 
@@ -34,6 +35,28 @@ class TestGalacticUnitConverter:
     # def test_convert(self, io_test_set):
     #    user_input, expected_output = io_test_set
 
+    def test_galactic_to_decimal_conversion(self):
+        roman_to_galactic = {
+            'I': 'GI',
+            'V': 'GV',
+            'X': 'GX',
+            'L': 'GL',
+            'C': 'GC',
+            'D': 'GD',
+            'M': 'GM'
+        }
+
+        for roman_rep, galactic_rep in roman_to_galactic.items():
+            input_line = f'{galactic_rep} is {roman_rep}'
+            self.guc.process_input_line(input_line)
+
+        tested_numbers = [1, 10, 77, 250, 999, 1000, 2523]
+
+        for number in tested_numbers:
+            roman_rep = roman.toRoman(number)
+            galactic_rep = [roman_to_galactic.get(digit) for digit in roman_rep]
+            assert self.guc.convert_galactic_to_decimal(galactic_rep) == number
+
     def test_adding_info_process_input_line(self):
         # Add information via inputs lines
         self.guc.process_input_line('glob is I')
@@ -41,9 +64,16 @@ class TestGalacticUnitConverter:
         self.guc.process_input_line('glob glob Silver is 34 Credits')
 
         # Checks if the information was extracted and stored correctly
-        assert self.guc.galactic_to_roman.get('glob') == 'I'
-        assert self.guc.galactic_to_roman.get('pish') == 'X'
+        assert self.guc.galactic_digit_to_roman.get('glob') == 'I'
+        assert self.guc.galactic_digit_to_roman.get('pish') == 'X'
         assert self.guc.material_values.get('Silver') == 17
+
+    # Get the last line printed
+    def get_output_line(self, capsys):
+        out, _ = capsys.readouterr()
+        # -2 because the last entry is an empty string
+        out = out.split('\n')[-2]
+        return out
 
     def test_requests_process_input_line(self, capsys):
         user_info_input = [
@@ -59,29 +89,19 @@ class TestGalacticUnitConverter:
         for line in user_info_input:
             self.guc.process_input_line(line)
 
-        # Get the last line printed
-        def get_output_line():
-            out, _ = capsys.readouterr()
-            # -2 because the last entry is an empty string
-            out = out.split('\n')[-2]
-            return out
-
         # Requests via inputs
         self.guc.process_input_line("how much is pish tegj glob glob ?")
-        assert get_output_line() == "pish tegj glob glob is 42"
+        assert self.get_output_line(capsys) == "pish tegj glob glob is 42"
         self.guc.process_input_line("how many Credits is glob prok Silver ?")
-        assert get_output_line() == "glob prok Silver is 68 Credits"
+        assert self.get_output_line(capsys) == "glob prok Silver is 68 Credits"
         self.guc.process_input_line("how many Credits is glob prok Gold ?")
-        assert get_output_line() == "glob prok Gold is 57800 Credits"
-
-        self.guc.process_input_line('how much wood could a woodchuck chuck if a woodchuck could chuck wood ?')
-        assert get_output_line() == "I have no idea what you are talking about"
+        assert self.get_output_line(capsys) == "glob prok Gold is 57800 Credits"
 
         # Re-setting values
         self.guc.process_input_line('glob is X')
         self.guc.process_input_line("how many Credits is glob glob Silver ?")
-        assert self.guc.galactic_to_roman.get('glob') == 'X'
-        assert get_output_line() == "glob glob Silver is 340 Credits"
+        assert self.guc.galactic_digit_to_roman.get('glob') == 'X'
+        assert self.get_output_line(capsys) == "glob glob Silver is 340 Credits"
 
     def test_edge_cases_process_input_line(self, capsys):
         pass
