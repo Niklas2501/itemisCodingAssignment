@@ -1,4 +1,5 @@
 import json
+from io import StringIO
 
 import pytest
 import roman
@@ -28,12 +29,6 @@ class TestGalacticUnitConverter:
     @pytest.fixture()
     def io_test_set(self, request):
         yield self.io_test_sets.get(request.param)
-
-    # TODO Enable again
-    # TODO Add additional test sets: 'alternative_test_set', 'missing_info_test_set', 'error_test_set'
-    # @pytest.mark.parametrize("io_test_set", ['predefined_test_set'], indirect=True)
-    # def test_convert(self, io_test_set):
-    #    user_input, expected_output = io_test_set
 
     def test_galactic_to_decimal_conversion(self):
         roman_to_galactic = {
@@ -67,13 +62,6 @@ class TestGalacticUnitConverter:
         assert self.guc.galactic_digit_to_roman.get('glob') == 'I'
         assert self.guc.galactic_digit_to_roman.get('pish') == 'X'
         assert self.guc.material_values.get('Silver') == 17
-
-    # Get the last line printed
-    def get_output_line(self, capsys):
-        out, _ = capsys.readouterr()
-        # -2 because the last entry is an empty string
-        out = out.split('\n')[-2]
-        return out
 
     def test_requests_process_input_line(self, capsys):
         user_info_input = [
@@ -162,6 +150,69 @@ class TestGalacticUnitConverter:
         assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
         self.guc.process_input_line('mok mok mok mok Platin is 500 Credits')
         assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
+
+    def get_output_line(self, capsys):
+        # Get the last line printed
+        out, _ = capsys.readouterr()
+        # -2 because the last entry is an empty string
+        out = out.split('\n')[-2]
+        return out
+
+    def dynamic_input_test(self, monkeypatch, capsys, list_of_input_lines: list[str], ) -> list[str]:
+        list_of_input_lines = list_of_input_lines.copy()
+
+        # Necessary to terminate convert() without an error
+        list_of_input_lines.append('\n')
+        input_lines = StringIO('\n'.join(list_of_input_lines))
+        monkeypatch.setattr('sys.stdin', input_lines)
+        self.guc.convert()
+
+        # get output as single lines in a list, exclude the last one because this is always an empty string
+        out = capsys.readouterr()[0].split('\n')[0:-1]
+        return out
+
+    def test_missing_info_process_input_line(self, monkeypatch, capsys):
+
+        # Missing information in info about material
+        user_inputs = [
+            'pok is I', 'mok pok pok Iron is 24 Credits',
+            # Expected output: 'missing information / invalid input: How much is mok ?',
+            'mok is X',
+        ]
+
+        converter_output = self.dynamic_input_test(monkeypatch, capsys, user_inputs)
+        assert converter_output[-1] == 'missing information / invalid input: How much is mok ?'
+
+        # Missing information in request, including wrong answer
+        user_inputs = [
+            'how many Credits is zok Iron ?',
+            # Expected output: 'missing information / invalid input: How much is zok ?'
+            # User input is should be a roman digit
+            'zok is 34',
+            # Expected output: 'missing information / invalid input: How much is zok ?'
+            'zok is L'
+            # Expected output: 'zok Iron is 100 Credits'
+        ]
+
+        converter_output = self.dynamic_input_test(monkeypatch, capsys, user_inputs)
+        assert converter_output[-3] == 'missing information / invalid input: How much is zok ?'
+        assert converter_output[-2] == 'missing information / invalid input: How much is zok ?'
+        assert converter_output[-1] == 'zok Iron is 100 Credits'
+
+        # More than just one information is missing
+        user_inputs = [
+            'how much is rok plok ?',
+            # Expected output: 'missing information / invalid input: How much is rok ?'
+            'rok is L',
+            # Expected output: 'missing information / invalid input: How much is plok ?'
+            'plok is X',
+            # Expected output: 'rok plok is 60'
+        ]
+
+        converter_output = self.dynamic_input_test(monkeypatch, capsys, user_inputs)
+        assert converter_output[-3] == 'missing information / invalid input: How much is rok ?'
+        assert converter_output[-2] == 'missing information / invalid input: How much is plok ?'
+        assert converter_output[-1] == 'rok plok is 60'
 
     def test_general_sanity_check_roman_numerals(self):
         # The string should only contain valid roman numerals
