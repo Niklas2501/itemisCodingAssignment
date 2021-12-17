@@ -22,7 +22,22 @@ class GalacticUnitConverter:
         self.material_values = {}
 
     def convert(self) -> None:
-        pass
+        """
+        Main method of the convert which just waits for input and forwards it to the processing of individual lines.
+        :return: None
+        """
+
+        while True:
+            try:
+                input_line = input()
+            except (KeyboardInterrupt, EOFError):
+                # Clean exit on termination
+                break
+
+            if input_line == '':
+                break
+            else:
+                self.process_input_line(input_line)
 
     def process_input_line(self, input_line: str) -> None:
         """
@@ -49,7 +64,7 @@ class GalacticUnitConverter:
         else:
             print('invalid input. Input ignored.')
 
-    def handle_galactic_numeral_info(self, parts: [str]) -> None:
+    def handle_galactic_numeral_info(self, parts: list[str]) -> None:
         """
         Used to process and store inputs regarding the mapping of intergalactic to roman numerals.
         Input line example: pish is X
@@ -69,7 +84,7 @@ class GalacticUnitConverter:
             else:
                 print('invalid input. Input ignored.')
 
-    def handle_material_info(self, parts: [str]) -> None:
+    def handle_material_info(self, parts: list[str]) -> None:
         """
         Used to process and store inputs regarding the value of materials.
         Input line example: glob glob Silver is 34 Credits
@@ -110,7 +125,7 @@ class GalacticUnitConverter:
             material_value = credits // amount_decimal
             self.material_values[material] = material_value
 
-    def convert_galactic_to_decimal(self, galactic_digits: [str]) -> Optional[int]:
+    def convert_galactic_to_decimal(self, galactic_digits: list[str]) -> Optional[int]:
         """
         Converts a list of galactic digits to a string containing the corresponding decimal number
         if the corresponding roman number is valid.
@@ -120,6 +135,24 @@ class GalacticUnitConverter:
 
         roman_numeral = []
         for galactic_digit in galactic_digits:
+
+            # Information missing: If there is no known mapping from the galactic to a roman digit
+            # ask the user to provide one.
+            while galactic_digit not in self.galactic_digit_to_roman.keys():
+                print(f'missing information / invalid input: How much is {galactic_digit} ?')
+
+                # Expected input format is equal to the standard input, e.g.: glob is X
+                user_in = input().strip().split(' ')
+
+                if len(user_in) != 3: continue
+                galactic_digit_new, _, roman_digit_new = user_in
+
+                # Check if the galactic digit in the input matches the one requested and whether
+                # a valid roman digit was provided.
+                # In case the correct format was provided, store the information like in the non-missing case.
+                if galactic_digit == galactic_digit_new and roman_digit_new in self.roman_digit_to_dec_value.keys():
+                    self.galactic_digit_to_roman[galactic_digit] = roman_digit_new
+
             roman_digit = self.galactic_digit_to_roman.get(galactic_digit)
             roman_numeral.append(roman_digit)
 
@@ -133,7 +166,7 @@ class GalacticUnitConverter:
         else:
             return None
 
-    def handle_request(self, parts: [str]) -> None:
+    def handle_request(self, parts: list[str]) -> None:
         if " ".join(parts[0:3]) == 'how much is':
             amount_galactic = parts[3:-1]
             amount_decimal = self.convert_galactic_to_decimal(amount_galactic)
@@ -192,7 +225,8 @@ class GalacticUnitConverter:
 
         return smaller_digits
 
-    def rule_compliant_subtraction(self, first_roman_digit: str, second_roman_digit: str) -> bool:
+    @staticmethod
+    def rule_compliant_subtraction(first_roman_digit: str, second_roman_digit: str) -> bool:
         """
         Checks whether second_numeral - first_numeral is allowed according to the rules.
         :param first_roman_digit: A for a roman numeral (sub)string "AB"
