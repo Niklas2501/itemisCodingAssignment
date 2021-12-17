@@ -53,12 +53,12 @@
       "how many Credits is Iron ?"
     ],
     "expected_output": [
-      "missing information: How much is mok ?",
-      "missing information: How much is zok ?",
+      "missing information / invalid input: How much is mok ?",
+      "missing information / invalid input: How much is zok ?",
       "zok Iron is 100 Credits",
-      "missing information: How much is plok ?",
-      "invalid input: How much is plok ?",
-      "plok iron is 100 Credits",
+      "missing information / invalid input: How much is plok ?",
+      "missing information / invalid input: How much is plok ?",
+      "plok Iron is 100 Credits",
       "Iron is 2 Credits"
     ]
   },

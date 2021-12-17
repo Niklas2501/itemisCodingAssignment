@@ -166,6 +166,7 @@ class GalacticUnitConverter:
             return None
 
     def handle_request(self, parts: list[str]) -> None:
+
         if " ".join(parts[0:3]) == 'how much is':
             amount_galactic = parts[3:-1]
             amount_decimal = self.convert_galactic_to_decimal(amount_galactic)
@@ -182,7 +183,14 @@ class GalacticUnitConverter:
 
             # Covert the amount of material requested into the decimal representation
             amount_galactic = parts[4:-2]
-            amount_decimal = self.convert_galactic_to_decimal(amount_galactic)
+
+            # No amount is given, e.g.: how many Credits is Iron ?
+            if len(amount_galactic) == 0:
+                amount_decimal = 1
+                amount_galactic_output = ''
+            else:
+                amount_decimal = self.convert_galactic_to_decimal(amount_galactic)
+                amount_galactic_output = " ".join(amount_galactic) + ' '
 
             # None is returned in case amount_galactic can't be converted to a valid roman numeral
             # (and thus not into a decimal)
@@ -192,9 +200,12 @@ class GalacticUnitConverter:
 
             # Get the material and its price per unit
             material = parts[-2]
-
             if material in self.material_values.keys():
                 material_value = self.material_values.get(material)
+            elif amount_galactic_output == '':
+                # In case material and amount are missing.
+                print('invalid input. Input ignored.')
+                return
             else:
                 print(f'unknown material: {material}')
                 return
@@ -204,7 +215,7 @@ class GalacticUnitConverter:
             # Cast to integer to avoid decimal places in the output but only if the value does not have decimal places
             overall_value = int(overall_value) if overall_value.is_integer() else overall_value
 
-            print(f'{" ".join(amount_galactic)} {material} is {overall_value} Credits')
+            print(f'{amount_galactic_output}{material} is {overall_value} Credits')
             return
 
         else:

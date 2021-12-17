@@ -322,6 +322,36 @@ class TestGalacticUnitConverter:
         assert converter_output[-2] == 'missing information / invalid input: How much is plok ?'
         assert converter_output[-1] == 'rok plok is 60'
 
-    @pytest.mark.parametrize("io_test_set", ['predefined_test_set'], indirect=True)
-    def test_convert(self, io_test_set):
-        user_input, expected_output = io_test_set
+
+    @pytest.mark.parametrize("io_test_set", ['predefined_test_set', 'alternative_test_set',
+                                             'missing_info_test_set', 'error_test_set'], indirect=True)
+    def test_convert(self, monkeypatch, capsys, io_test_set):
+
+        # Type check fails because of @pytest.mark.parametrize-construcition
+        # noinspection PyTypeChecker
+        user_input, expected_output = io_test_set['user_input'], io_test_set['expected_output']
+
+        # noinspection PyTypeChecker
+        converter_output = self.dynamic_input_test(monkeypatch, capsys, user_input)
+
+        # Check that every line in the output matches the excepted one
+        assert len(converter_output) == len(expected_output)
+        for converter_line, expected_line in zip(converter_output, expected_output):
+            assert converter_line == expected_line
+
+    def test_previous_bugs(self, capsys):
+
+        # Correct handling of materials with non-integer values
+        self.guc.process_input_line('glob is I')
+        self.guc.process_input_line('prok is V')
+        self.guc.process_input_line('pish is X')
+        self.guc.process_input_line('pish pish Iron is 3910 Credits')
+        self.guc.process_input_line('how many Credits is glob Iron ?')
+        assert self.get_output_line(capsys) == 'glob Iron is 195.5 Credits'
+        self.guc.process_input_line('how many Credits is glob prok Iron ?')
+        assert self.get_output_line(capsys) == 'glob prok Iron is 782 Credits'
+
+        # Missing coverage: material not given
+        self.guc.process_input_line('lok is X')
+        self.guc.process_input_line('how many Credits is lok ?')
+        assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
