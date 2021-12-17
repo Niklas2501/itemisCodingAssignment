@@ -103,15 +103,65 @@ class TestGalacticUnitConverter:
         assert self.guc.galactic_digit_to_roman.get('glob') == 'X'
         assert self.get_output_line(capsys) == "glob glob Silver is 340 Credits"
 
-    def test_edge_cases_process_input_line(self, capsys):
-        pass
-        # TODO Add testes cases for missing information and other edge cases.
-        #   Including missing material
-        #   Including input string that can't be interpreted at all (with and wout ?)
-        #   Including just empty string / new line
-        #   Including credits / amount integer division not possible
-        # self.guc.process_input_line("how much wood could a woodchuck chuck if a woodchuck could chuck wood ?")
-        # assert get_output_line() == "I have no idea what you are talking about"
+    def test_exceptional_inputs_process_input_line(self, capsys):
+
+        # General inputs that can't be interpreted meaningfully
+        self.guc.process_input_line('')
+        assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
+
+        self.guc.process_input_line('invalid input')
+        assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
+
+        self.guc.process_input_line('I is pok')
+        assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
+
+        # Requests that can't be answered
+        self.guc.process_input_line('how many Credits is ?')
+        assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
+
+        self.guc.process_input_line('how much wood could a woodchuck chuck if a woodchuck could chuck wood ?')
+        assert self.get_output_line(capsys) == "I have no idea what you are talking about"
+
+        self.guc.process_input_line('what time is it ?')
+        assert self.get_output_line(capsys) == "I have no idea what you are talking about"
+
+        self.guc.process_input_line('how many Credits do pok Iron cost ?')
+        assert self.get_output_line(capsys) == "I have no idea what you are talking about"
+
+        # Invalid roman digits used when defining
+        self.guc.process_input_line('pok is K')
+        assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
+        self.guc.process_input_line('pok is XI')
+        assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
+        self.guc.process_input_line('pok is x')
+        assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
+
+        # Wrong unit given
+        self.guc.process_input_line('pok is I')
+        self.guc.process_input_line('pok pok Gold is 300 Dollar')
+        assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
+
+        self.guc.process_input_line('pok is I')
+        self.guc.process_input_line('zok is V')
+        self.guc.process_input_line('mok is X')
+
+        # No material given when adding information
+        self.guc.process_input_line('mok pok is 100 Credits')
+        assert self.get_output_line(capsys) == 'pok does not seem to be a material. Input ignored.'
+
+        # Unknown material given in a request
+        self.guc.process_input_line('how many Credits is pok pok Copper ?')
+        assert self.get_output_line(capsys) == 'unknown material: Copper'
+
+        # Amount of credit not divisible by the amount ->  no integer material value
+        self.guc.process_input_line('mok Gold is 55 Credits')
+        assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
+
+        # Invalid roman number given as amount
+        self.guc.process_input_line('pok pok mok Platin is 500 Credits')
+        assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
+        self.guc.process_input_line('mok mok mok mok Platin is 500 Credits')
+        assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
 
     def test_general_sanity_check_roman_numerals(self):
         # The string should only contain valid roman numerals
