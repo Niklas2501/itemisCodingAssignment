@@ -117,12 +117,11 @@ class GalacticUnitConverter:
 
         # amount_roman is None in case amount_galactic can not be converted to
         # a valid roman numeral and thus not to a decimal number.
-        # Also ensure that the amount of credits is integer dividable by the material amount
-        if amount_decimal is None or credits % amount_decimal != 0:
+        if amount_decimal is None:
             print('invalid input. Input ignored.')
         else:
             # Calculate and store the value of a single unit of the material.
-            material_value = credits // amount_decimal
+            material_value = credits / amount_decimal
             self.material_values[material] = material_value
 
     def convert_galactic_to_decimal(self, galactic_digits: list[str]) -> Optional[int]:
@@ -201,6 +200,10 @@ class GalacticUnitConverter:
                 return
 
             overall_value = amount_decimal * material_value
+
+            # Cast to integer to avoid decimal places in the output but only if the value does not have decimal places
+            overall_value = int(overall_value) if overall_value.is_integer() else overall_value
+
             print(f'{" ".join(amount_galactic)} {material} is {overall_value} Credits')
             return
 

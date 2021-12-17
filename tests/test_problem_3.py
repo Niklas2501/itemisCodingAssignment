@@ -34,7 +34,7 @@ class TestGalacticUnitConverter:
         self.io_test_sets: dict = loaded_test_data
 
     @pytest.fixture()
-    def io_test_set(self, request):
+    def io_test_set(self, request) -> dict:
         """
         Returns a specific test subset from the test data, such that a parametrised test can be used to test all
         subsets.
@@ -227,15 +227,21 @@ class TestGalacticUnitConverter:
         self.guc.process_input_line('how many Credits is pok pok Copper ?')
         assert self.get_output_line(capsys) == 'unknown material: Copper'
 
+        # This test is disabled because non integer valued materials are allowed (iron is )
         # Amount of credit not divisible by the amount ->  no integer material value
-        self.guc.process_input_line('mok Gold is 55 Credits')
-        assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
+        # self.guc.process_input_line('mok Gold is 55 Credits')
+        # assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
 
         # Invalid roman number given as amount
         self.guc.process_input_line('pok pok mok Platin is 500 Credits')
         assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
         self.guc.process_input_line('mok mok mok mok Platin is 500 Credits')
         assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
+
+        # No amount is given
+        self.guc.process_input_line('pok Iron is 15 Credits')
+        self.guc.process_input_line('how many Credits is Iron ?')
+        assert self.get_output_line(capsys) == 'Iron is 15 Credits'
 
     @staticmethod
     def get_output_line(capsys) -> str:

@@ -23,7 +23,7 @@
     ]
   },
   "alternative_test_set": {
-    "user_input_info": [
+    "user_input": [
       "pok is I",
       "mok is X",
       "zok is L",
@@ -37,11 +37,11 @@
     "expected_output": [
       "mok mok is 20",
       "pok pok Silver is 6 Credits",
-      "mok pok Gold is 900 Gold"
+      "mok pok Gold is 330 Credits"
     ]
   },
   "missing_info_test_set": {
-    "user_input_info": [
+    "user_input": [
       "pok is I",
       "mok pok pok Iron is 24 Credits",
       "mok is X",
@@ -63,7 +63,7 @@
     ]
   },
   "error_test_set": {
-    "user_input_info": [
+    "user_input": [
       "pok is I",
       "mok is X",
       "plok is L",
@@ -71,8 +71,8 @@
       "how many Credits is plok mok plok Iron ?"
     ],
     "expected_output": [
-      "warning: plok mok plok is an invalid number. Input ignored.",
-      "warning: plok mok plok is an invalid number. Input ignored."
+      "invalid input. Input ignored.",
+      "invalid input. Input ignored."
     ]
   }
 }
