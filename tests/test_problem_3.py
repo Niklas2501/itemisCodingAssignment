@@ -22,15 +22,100 @@ def loaded_test_data():
 class TestGalacticUnitConverter:
 
     @pytest.fixture(autouse=True)
-    def setup(self, loaded_test_data):
+    def setup(self, loaded_test_data) -> None:
+        """
+        Prepares a new instance of the tested class for each test.
+        :param loaded_test_data: The fixture which loaded the test data from a file such that it can be accessed from
+        within the class without reloading it from disk each time.
+        :return: None
+        """
+
         self.guc = GalacticUnitConverter()
         self.io_test_sets: dict = loaded_test_data
 
     @pytest.fixture()
     def io_test_set(self, request):
+        """
+        Returns a specific test subset from the test data, such that a parametrised test can be used to test all
+        subsets.
+        :param request: A request object with which @pytest.mark.parametrize passes a parameter.
+        :return: A test data subset as dictionary with the name request.param.
+        """
+
         yield self.io_test_sets.get(request.param)
 
+    def test_general_is_valid_roman_numeral(self):
+        # The string should only contain valid roman numerals
+        assert not self.guc.is_valid_roman_numeral('a')
+
+        # The string should not contain spaces or other control characters
+        assert not self.guc.is_valid_roman_numeral(' XI\n')
+
+        # i is valid but should be upper case
+        assert not self.guc.is_valid_roman_numeral('i')
+
+    def test_repetitions_is_valid_roman_numeral(self):
+        # Tests repetition of I, X, C and M, also subtraction to some degree for the separated by smaller value pattern
+        assert self.guc.is_valid_roman_numeral('X')
+        assert self.guc.is_valid_roman_numeral('XI')
+        assert self.guc.is_valid_roman_numeral('XIX')
+        assert self.guc.is_valid_roman_numeral('XXX')
+        assert self.guc.is_valid_roman_numeral('XXXI')
+        assert self.guc.is_valid_roman_numeral('XXXIX')
+
+        # Subtracted numeral follows multiple times
+        assert self.guc.is_valid_roman_numeral('XIXII')
+        assert self.guc.is_valid_roman_numeral('XIXIII')
+
+        # More complicated cases
+        assert self.guc.is_valid_roman_numeral('MDXIXI')
+        assert self.guc.is_valid_roman_numeral('MDXXIXI')
+        assert self.guc.is_valid_roman_numeral('MDXXXI')
+        assert self.guc.is_valid_roman_numeral('MMCDXXXIXIII')
+
+        # More than 3 repetitions
+        assert not self.guc.is_valid_roman_numeral('MDXXXXI')
+
+        # More than 3 / 4 repetitions is also caught in case of subtraction
+        assert not self.guc.is_valid_roman_numeral('XXXXIXX')
+        assert not self.guc.is_valid_roman_numeral('MDXXIXX')
+
+        # D, L, V can never be repeated
+        assert not self.guc.is_valid_roman_numeral('DD')
+        assert not self.guc.is_valid_roman_numeral('DDXD')
+        assert not self.guc.is_valid_roman_numeral('MLL')
+
+    def test_subtraction_is_valid_roman_numeral(self):
+        # "I" can be subtracted from "V" and "X" only
+        assert self.guc.is_valid_roman_numeral('IV')
+        assert self.guc.is_valid_roman_numeral('IX')
+        assert not self.guc.is_valid_roman_numeral('IM')
+
+        # "X" can be subtracted from "L" and "C" only
+        assert self.guc.is_valid_roman_numeral('XL')
+        assert self.guc.is_valid_roman_numeral('XC')
+        assert not self.guc.is_valid_roman_numeral('XM')
+
+        # "C" can be subtracted from "D" and "M" only
+        assert self.guc.is_valid_roman_numeral('CD')
+        assert self.guc.is_valid_roman_numeral('CM')
+
+        # "V", "L", and "D" can never be subtracted
+        assert not self.guc.is_valid_roman_numeral('DM')
+        assert not self.guc.is_valid_roman_numeral('LC')
+        assert not self.guc.is_valid_roman_numeral('VX')
+
+        # Only one small-value symbol may be subtracted from any large-value symbol
+        assert not self.guc.is_valid_roman_numeral('IIX')
+        assert not self.guc.is_valid_roman_numeral('XXC')
+
+        # Added later on
+        assert not self.guc.is_valid_roman_numeral('IXC')
+        assert not self.guc.is_valid_roman_numeral('MVIXC')
+        assert not self.guc.is_valid_roman_numeral('CIIX')
+
     def test_galactic_to_decimal_conversion(self):
+        # Some default mapping from roman to galactic digits
         roman_to_galactic = {
             'I': 'GI',
             'V': 'GV',
@@ -41,12 +126,13 @@ class TestGalacticUnitConverter:
             'M': 'GM'
         }
 
+        # Simulate user input of this mapping.
         for roman_rep, galactic_rep in roman_to_galactic.items():
             input_line = f'{galactic_rep} is {roman_rep}'
             self.guc.process_input_line(input_line)
 
+        # For a list of numbers check if the conversion works as expected.
         tested_numbers = [1, 10, 77, 250, 999, 1000, 2523]
-
         for number in tested_numbers:
             roman_rep = roman.toRoman(number)
             galactic_rep = [roman_to_galactic.get(digit) for digit in roman_rep]
@@ -151,14 +237,30 @@ class TestGalacticUnitConverter:
         self.guc.process_input_line('mok mok mok mok Platin is 500 Credits')
         assert self.get_output_line(capsys) == 'invalid input. Input ignored.'
 
-    def get_output_line(self, capsys):
-        # Get the last line printed
+    @staticmethod
+    def get_output_line(capsys) -> str:
+        """
+        Helper method to get the last line printed by the converter.
+        :param capsys: A capsys fixture object.
+        :return: The last line printed.
+        """
+
         out, _ = capsys.readouterr()
+
         # -2 because the last entry is an empty string
         out = out.split('\n')[-2]
+
         return out
 
     def dynamic_input_test(self, monkeypatch, capsys, list_of_input_lines: list[str], ) -> list[str]:
+        """
+        Helper method to simulate input from the user and collect the output produced by the converter.
+        :param monkeypatch: A monkeypatch fixture object.
+        :param capsys: A capsys fixture object.
+        :param list_of_input_lines: A list of lines that should simulate the user input.
+        :return: The output printed by the converter as list of strings.
+        """
+
         list_of_input_lines = list_of_input_lines.copy()
 
         # Necessary to terminate convert() without an error
@@ -167,7 +269,7 @@ class TestGalacticUnitConverter:
         monkeypatch.setattr('sys.stdin', input_lines)
         self.guc.convert()
 
-        # get output as single lines in a list, exclude the last one because this is always an empty string
+        # Get output as single lines in a list, exclude the last one because this is always an empty string
         out = capsys.readouterr()[0].split('\n')[0:-1]
         return out
 
@@ -214,72 +316,6 @@ class TestGalacticUnitConverter:
         assert converter_output[-2] == 'missing information / invalid input: How much is plok ?'
         assert converter_output[-1] == 'rok plok is 60'
 
-    def test_general_sanity_check_roman_numerals(self):
-        # The string should only contain valid roman numerals
-        assert not self.guc.is_valid_roman_numeral('a')
-
-        # The string should not contain spaces or other control characters
-        assert not self.guc.is_valid_roman_numeral(' XI\n')
-
-        # i is valid but should be upper case
-        assert not self.guc.is_valid_roman_numeral('i')
-
-    def test_repetitions_sanity_check_roman_numerals(self):
-        # Tests repetition of I, X, C and M, also subtraction to some degree for the separated by smaller value pattern
-        assert self.guc.is_valid_roman_numeral('X')
-        assert self.guc.is_valid_roman_numeral('XI')
-        assert self.guc.is_valid_roman_numeral('XIX')
-        assert self.guc.is_valid_roman_numeral('XXX')
-        assert self.guc.is_valid_roman_numeral('XXXI')
-        assert self.guc.is_valid_roman_numeral('XXXIX')
-
-        # Subtracted numeral follows multiple times
-        assert self.guc.is_valid_roman_numeral('XIXII')
-        assert self.guc.is_valid_roman_numeral('XIXIII')
-
-        # More complicated cases
-        assert self.guc.is_valid_roman_numeral('MDXIXI')
-        assert self.guc.is_valid_roman_numeral('MDXXIXI')
-        assert self.guc.is_valid_roman_numeral('MDXXXI')
-        assert self.guc.is_valid_roman_numeral('MMCDXXXIXIII')
-
-        # More than 3 repetitions
-        assert not self.guc.is_valid_roman_numeral('MDXXXXI')
-
-        # More than 3 / 4 repetitions is also caught in case of subtraction
-        assert not self.guc.is_valid_roman_numeral('XXXXIXX')
-        assert not self.guc.is_valid_roman_numeral('MDXXIXX')
-
-        # D, L, V can never be repeated
-        assert not self.guc.is_valid_roman_numeral('DD')
-        assert not self.guc.is_valid_roman_numeral('DDXD')
-        assert not self.guc.is_valid_roman_numeral('MLL')
-
-    def test_subtraction_sanity_check_roman_numerals(self):
-        # "I" can be subtracted from "V" and "X" only.
-        assert self.guc.is_valid_roman_numeral('IV')
-        assert self.guc.is_valid_roman_numeral('IX')
-        assert not self.guc.is_valid_roman_numeral('IM')
-
-        # "X" can be subtracted from "L" and "C" only.
-        assert self.guc.is_valid_roman_numeral('XL')
-        assert self.guc.is_valid_roman_numeral('XC')
-        assert not self.guc.is_valid_roman_numeral('XM')
-
-        # "C" can be subtracted from "D" and "M" only.
-        assert self.guc.is_valid_roman_numeral('CD')
-        assert self.guc.is_valid_roman_numeral('CM')
-
-        # "V", "L", and "D" can never be subtracted.
-        assert not self.guc.is_valid_roman_numeral('DM')
-        assert not self.guc.is_valid_roman_numeral('LC')
-        assert not self.guc.is_valid_roman_numeral('VX')
-
-        # Only one small-value symbol may be subtracted from any large-value symbol.
-        assert not self.guc.is_valid_roman_numeral('IIX')
-        assert not self.guc.is_valid_roman_numeral('XXC')
-
-        # Added later on
-        assert not self.guc.is_valid_roman_numeral('IXC')
-        assert not self.guc.is_valid_roman_numeral('MVIXC')
-        assert not self.guc.is_valid_roman_numeral('CIIX')
+    @pytest.mark.parametrize("io_test_set", ['predefined_test_set'], indirect=True)
+    def test_convert(self, io_test_set):
+        user_input, expected_output = io_test_set
