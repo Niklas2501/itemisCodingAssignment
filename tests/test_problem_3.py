@@ -8,11 +8,13 @@ from assignment.problem_3 import GalacticUnitConverter
 
 
 @pytest.fixture(scope="session")
-def loaded_test_data():
+def loaded_test_data() -> dict:
     """
     Session wide fixture to loaded the input / output data once from a json file in the resource directory.
-    :return:
+    :return: The test data as a dictionary
     """
+
+    # Note: File paths should be outsourced to a configuration file in a production environment
     with open('../resources/io_test_data.json') as json_file:
         test_data = json.load(json_file)
 
@@ -126,12 +128,12 @@ class TestGalacticUnitConverter:
             'M': 'GM'
         }
 
-        # Simulate user input of this mapping.
+        # Simulate user input of this mapping
         for roman_rep, galactic_rep in roman_to_galactic.items():
             input_line = f'{galactic_rep} is {roman_rep}'
             self.guc.process_input_line(input_line)
 
-        # For a list of numbers check if the conversion works as expected.
+        # For a list of numbers check if the conversion works as expected
         tested_numbers = [1, 10, 77, 250, 999, 1000, 2523]
         for number in tested_numbers:
             roman_rep = roman.toRoman(number)
@@ -321,7 +323,6 @@ class TestGalacticUnitConverter:
         assert converter_output[-3] == 'missing information / invalid input: How much is rok ?'
         assert converter_output[-2] == 'missing information / invalid input: How much is plok ?'
         assert converter_output[-1] == 'rok plok is 60'
-
 
     @pytest.mark.parametrize("io_test_set", ['predefined_test_set', 'alternative_test_set',
                                              'missing_info_test_set', 'error_test_set'], indirect=True)

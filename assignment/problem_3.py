@@ -23,7 +23,7 @@ class GalacticUnitConverter:
 
     def convert(self) -> None:
         """
-        Main method of the convert which just waits for input and forwards it to the processing of individual lines.
+        Main method of the converter that just accepts user input and forwards it to the processing of individual lines.
         :return: None
         """
 
@@ -34,6 +34,7 @@ class GalacticUnitConverter:
                 # Clean exit on termination
                 break
 
+            # Besides ctrl + c, an empty input also terminates the program
             if input_line == '':
                 break
             else:
@@ -46,7 +47,7 @@ class GalacticUnitConverter:
         :return: None
         """
 
-        # Split the input line into single terms separated by a space.
+        # Split the input line into single terms separated by a space
         parts = input_line.strip().split(' ')
 
         # Basic check for the number of terms such that out of range errors are avoided.
@@ -66,7 +67,7 @@ class GalacticUnitConverter:
 
     def handle_galactic_numeral_info(self, parts: list[str]) -> None:
         """
-        Used to process and store inputs regarding the mapping of intergalactic to roman numerals.
+        Used to process and store inputs regarding the mapping of galactic to roman numerals.
         Input line example: pish is X
         :param parts: A list of terms (strings) in the input line.
         :return: None
@@ -79,7 +80,7 @@ class GalacticUnitConverter:
 
             # Ensure the last part of the input really is a roman digit
             if roman_digit in self.roman_digit_to_dec_value.keys():
-                # Store the mapping of galactic to a roman numeral
+                # Store the mapping of galactic to the roman numeral
                 self.galactic_digit_to_roman[galactic_digit] = roman_digit
             else:
                 print('invalid input. Input ignored.')
@@ -98,12 +99,12 @@ class GalacticUnitConverter:
         except ValueError:
             credits = None
 
-        # Abort in case no valid credit amount is given or the input ends with an unexpected term.
+        # Abort in case no valid credit amount is given or the input ends with an unexpected term
         if parts[-1] != 'Credits' or credits is None:
             print('invalid input. Input ignored.')
             return
 
-        # The material should be the fourth to last term, everything before describes the amount as a galactic number.
+        # The material should be the fourth to last term
         material = parts[-4]
 
         # Basic check if the extracted term really is a material
@@ -112,22 +113,22 @@ class GalacticUnitConverter:
             print(f'{material} does not seem to be a material. Input ignored.')
             return
 
+        # Everything before the material describes the amount as a galactic number.´
         amount_galactic = parts[0:-4]
         amount_decimal = self.convert_galactic_to_decimal(amount_galactic)
 
         # amount_roman is None in case amount_galactic can not be converted to
-        # a valid roman numeral and thus not to a decimal number.
+        # a valid roman numeral and thus not to a decimal number
         if amount_decimal is None:
             print('invalid input. Input ignored.')
         else:
-            # Calculate and store the value of a single unit of the material.
+            # Calculate and store the value of a single unit of the material
             material_value = credits / amount_decimal
             self.material_values[material] = material_value
 
     def convert_galactic_to_decimal(self, galactic_digits: list[str]) -> Optional[int]:
         """
-        Converts a list of galactic digits to a string containing the corresponding decimal number
-        if the corresponding roman number is valid.
+        Converts a list of galactic digits into the decimal numeral if the corresponding roman numeral is valid.
         :param galactic_digits: A list of galactic digits.
         :return: The corresponding decimal number. In case no valid roman numeral exists None is returned.
         """
@@ -143,12 +144,13 @@ class GalacticUnitConverter:
                 # Expected input format is equal to the standard input, e.g.: glob is X
                 user_in = input().strip().split(' ')
 
+                # Ask again if the input does not match the expected format
                 if len(user_in) != 3: continue
-                galactic_digit_new, _, roman_digit_new = user_in
 
                 # Check if the galactic digit in the input matches the one requested and whether
-                # a valid roman digit was provided.
-                # In case the correct format was provided, store the information like in the non-missing case.
+                # a valid roman digit was provided
+                # In case the correct format was provided, store the information like in the non-missing case
+                galactic_digit_new, _, roman_digit_new = user_in
                 if galactic_digit == galactic_digit_new and roman_digit_new in self.roman_digit_to_dec_value.keys():
                     self.galactic_digit_to_roman[galactic_digit] = roman_digit_new
 
@@ -159,15 +161,22 @@ class GalacticUnitConverter:
 
         if self.is_valid_roman_numeral(roman_numeral):
 
-            # A library function is used to convert the roman numeral into a decimal representation.
+            # A library function is used to convert the roman numeral into a decimal representation
             decimal_number = roman.fromRoman(roman_numeral)
             return decimal_number
         else:
             return None
 
     def handle_request(self, parts: list[str]) -> None:
+        """
+        Method the handle inputs containing requests, i.e. ending with a '?'.
+        :param parts:  A list of terms (strings) in the input line.
+        :return: None
+        """
 
         if " ".join(parts[0:3]) == 'how much is':
+
+            # The amount is assumed to be everything between 'is' and '?'
             amount_galactic = parts[3:-1]
             amount_decimal = self.convert_galactic_to_decimal(amount_galactic)
 
@@ -181,7 +190,7 @@ class GalacticUnitConverter:
 
         elif " ".join(parts[0:4]) == 'how many Credits is':
 
-            # Covert the amount of material requested into the decimal representation
+            # Extract the elements that describe the requested amount
             amount_galactic = parts[4:-2]
 
             # No amount is given, e.g.: how many Credits is Iron ?
@@ -189,6 +198,7 @@ class GalacticUnitConverter:
                 amount_decimal = 1
                 amount_galactic_output = ''
             else:
+                # Covert the amount of material requested into the decimal representation
                 amount_decimal = self.convert_galactic_to_decimal(amount_galactic)
                 amount_galactic_output = " ".join(amount_galactic) + ' '
 
@@ -203,7 +213,8 @@ class GalacticUnitConverter:
             if material in self.material_values.keys():
                 material_value = self.material_values.get(material)
             elif amount_galactic_output == '':
-                # In case material and amount are missing.
+                # In case material and amount are missing
+                # Otherwise would interpret 'is' as material
                 print('invalid input. Input ignored.')
                 return
             else:
@@ -212,14 +223,14 @@ class GalacticUnitConverter:
 
             overall_value = amount_decimal * material_value
 
-            # Cast to integer to avoid decimal places in the output but only if the value does not have decimal places
+            # Cast to integer to avoid decimal places in the output but only if the value is whole number
             overall_value = int(overall_value) if overall_value.is_integer() else overall_value
 
             print(f'{amount_galactic_output}{material} is {overall_value} Credits')
             return
 
         else:
-            # This answer is printed in case it is a request (input ending with a ?) that can't be interpreted at all.
+            # This answer is printed in case it is a request (input ending with a ?) that can't be interpreted at all
             print('I have no idea what you are talking about')
             return
 
@@ -232,7 +243,7 @@ class GalacticUnitConverter:
         smaller_digits = []
         value_of_target = self.roman_digit_to_dec_value.get(target_roman_digit)
 
-        # Safe variant which does not rely on the fact the the dictionary is sorted by value.
+        # Safe variant which does not rely on the fact the the dictionary is sorted by value
         for digit, value in self.roman_digit_to_dec_value.items():
             if value < value_of_target:
                 smaller_digits.append(digit)
@@ -249,7 +260,7 @@ class GalacticUnitConverter:
         """
 
         # Alternatively to the hard-coded rules for I,X and C, a "subtraction is only allowed from the next
-        # two higher symbols" rule could have been implemented using self.numeral_to_value.
+        # two higher symbols" rule could have been implemented using self.numeral_to_value
         allowed_to_subtract_from = {
             'I': ['V', 'X'],
             'X': ['L', 'C'],
@@ -258,7 +269,7 @@ class GalacticUnitConverter:
 
         if first_roman_digit in ['V', 'L', 'D']:
             return False
-        elif not second_roman_digit in allowed_to_subtract_from.get(first_roman_digit):
+        elif second_roman_digit not in allowed_to_subtract_from.get(first_roman_digit):
             return False
         else:
             return True
@@ -268,7 +279,7 @@ class GalacticUnitConverter:
         Checks whether the input string is a valid roman numeral.
         For the purpose of the assignment, the implementation adheres to the given rules,
             even if simpler tests for the correctness of a roman numeral exist.
-        :param roman_numeral: A string containing a roman numeral
+        :param roman_numeral: A string containing a roman numeral.
         :return: True if roman_numeral is a valid roman numeral, False otherwise.
         """
 
@@ -293,14 +304,14 @@ class GalacticUnitConverter:
 
             if len(smaller_digits) > 0:
                 smaller_digits_str = "".join(smaller_digits)
-                # Pattern: More than 4 receptions or
+                # Pattern: More than 4 receptions or more than one repetition after a subtraction
                 pattern = f'([{roman_digit}]{{4,}}|([{roman_digit}]{{1,3}}[{smaller_digits_str}][{roman_digit}]{{2,}}))'
             else:
-                # Specific pattern for roman_digit, from which nothing can be subtracted, e.g. I
+                # Specific pattern for roman_digit, from which nothing can be subtracted, i.e. I
                 # smaller_digits is emtpy -> wrong pattern check
                 pattern = f'[{roman_digit}]{{4,}}'
 
-            # In case the pattern is found a rules is broken and the sanity check fails.
+            # In case the pattern is found a rules is broken and the sanity check fails
             pattern = re.compile(pattern)
             if bool(re.search(pattern, roman_numeral)):
                 return False
@@ -313,12 +324,12 @@ class GalacticUnitConverter:
 
             prev_digit = roman_numeral[index - 1]
 
-            # Subtraction case:
+            # Subtraction case
             if self.roman_digit_to_dec_value.get(prev_digit) < self.roman_digit_to_dec_value.get(current_digit):
                 if not self.rule_compliant_subtraction(prev_digit, current_digit):
                     return False
 
-                # Starting from the third numeral, a double subtraction error must be checked.
+                # Starting from the third numeral, a double subtraction error must be checked
                 if index > 1:
 
                     # Check if numeral at two positions before the current one also has a lower value
